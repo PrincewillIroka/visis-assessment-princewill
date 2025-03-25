@@ -1,11 +1,85 @@
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import React, { useState, useRef } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+} from "react-native";
 import { BOOK_DETAILS } from "@/constants/BooksDetails";
 import BookType from "@/types";
+import {
+  CameraView,
+  useCameraPermissions,
+  CameraCapturedPicture,
+} from "expo-camera";
 
 export default function HomeScreen() {
+  const [isScanning, setIsScanning] = useState(false);
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+  const [camera, setCamera] = useState<CameraView | null>(null);
+  const [capturedImage, setCapturedImage] = useState("");
+
+  const takePicture = async () => {
+    try {
+      if (camera) {
+        const picture = (await camera.takePictureAsync(
+          {}
+        )) as CameraCapturedPicture;
+
+        if (!picture || !picture?.uri) {
+          throw new Error("Failed to capture picture or uri is missing.");
+        } else {
+          setCapturedImage(picture.uri);
+          setIsScanning(false);
+        }
+      }
+    } catch (e) {
+      console.error("Error taking picture:", e);
+    }
+  };
+
+  const handleBookScan = () => {
+    if (!cameraPermission) {
+      requestCameraPermission();
+    } else if (!isScanning) {
+      setIsScanning(true);
+      setCapturedImage("");
+    } else {
+      takePicture();
+    }
+  };
+
   return (
     <ScrollView>
-      <View style={styles.bookContainer}>
+      <View style={styles.layoutContainer}>
+        <View style={styles.topSection}>
+          {cameraPermission && isScanning ? (
+            <CameraView
+              style={styles.cameraView}
+              ref={(ref) => setCamera(ref)}
+            ></CameraView>
+          ) : capturedImage ? (
+            <Image
+              style={styles.cameraView}
+              source={{ uri: capturedImage }}
+              resizeMode="cover"
+            />
+          ) : null}
+          <TouchableOpacity
+            style={styles.scanButton}
+            onPress={() => handleBookScan()}
+          >
+            <Text style={styles.scanButtonText}>
+              {capturedImage
+                ? "Rescan Book Cover"
+                : isScanning
+                ? "Capture"
+                : "Scan Book Cover"}
+            </Text>
+          </TouchableOpacity>
+        </View>
         {BOOK_DETAILS.map(
           ({ title, author, summary }: BookType, index: number) => (
             <View style={styles.bookCol} key={index}>
@@ -30,8 +104,36 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  bookContainer: {
+  layoutContainer: {
     padding: 10,
+  },
+  topSection: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+  },
+  cameraView: {
+    height: 200,
+    width: "90%",
+    position: "relative",
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  scanButton: {
+    marginBottom: 20,
+    marginHorizontal: "auto",
+    height: 40,
+    width: 160,
+    backgroundColor: "#0e86d4",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 5,
+  },
+  scanButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
   },
   bookCol: {
     display: "flex",

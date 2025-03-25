@@ -4325,6 +4325,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-camera@npm:^16.0.18":
+  version: 16.0.18
+  resolution: "expo-camera@npm:16.0.18"
+  dependencies:
+    invariant: ^2.2.4
+  peerDependencies:
+    expo: "*"
+    react: "*"
+    react-native: "*"
+    react-native-web: "*"
+  peerDependenciesMeta:
+    react-native-web:
+      optional: true
+  checksum: 91c7f23bcb7567500277a0c5867aa3c1b9c5a6af82888514186a985fbb00b0682ee1ccd06a122484a2549ae00a7d8d83c2edeabdc273e284b0c23eb9a0892368
+  languageName: node
+  linkType: hard
+
 "expo-constants@npm:~17.0.5, expo-constants@npm:~17.0.8":
   version: 17.0.8
   resolution: "expo-constants@npm:17.0.8"
@@ -9675,6 +9692,7 @@ __metadata:
     "@types/react-test-renderer": ^18.3.0
     expo: ~52.0.40
     expo-blur: ~14.0.3
+    expo-camera: ^16.0.18
     expo-constants: ~17.0.8
     expo-font: ~13.0.4
     expo-haptics: ~14.0.1
