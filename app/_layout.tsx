@@ -32,23 +32,20 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={DefaultTheme}>
       <Stack>
         <Stack.Screen
           name="(home)"
           options={{
-            title: "Reading Activities",
             headerTitle: "Reading Activities",
-            headerLargeTitle: true,
             headerShown: true,
-            headerTitleStyle: {
-              fontSize: 20,
-            },
+            statusBarHidden: false,
+            headerTitleAlign: "center",
+            statusBarStyle: "dark",
           }}
         />
         <Stack.Screen name="+not-found" />
       </Stack>
-      <StatusBar style="auto" />
     </ThemeProvider>
   );
 }

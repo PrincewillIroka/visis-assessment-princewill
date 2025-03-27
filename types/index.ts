@@ -1,7 +1,7 @@
 type BookType = {
   title: string;
-  author: string;
-  summary: string;
+  authors: string[];
+  description: string;
 };
 
 export default BookType;
