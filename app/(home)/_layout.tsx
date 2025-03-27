@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import {
   CameraView,
@@ -21,6 +22,8 @@ export default function HomeScreen() {
   const [camera, setCamera] = useState<CameraView | null>(null);
   const [capturedImage, setCapturedImage] = useState("");
   const [items, setItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [bookText, setBookText] = useState("No book here");
 
   const getBookInfo = async (searchQuery: string) => {
     let query = encodeURIComponent(searchQuery.trim());
@@ -35,16 +38,23 @@ export default function HomeScreen() {
     )
       .then((res) => res.json())
       .then(({ items = [] }) => {
-        if (items.length > 0) {
-          setItems(items);
+        setItems(items);
+        setIsLoading(false);
+        if (!items.length) {
+          setBookText("No books found");
         }
       })
       .catch((e) => {
         console.error("Error fetching book info:", e);
+        setIsLoading(false);
+        setBookText("Error fetching book info. Please try again!");
       });
   };
 
   const detectText = async (uri: string) => {
+    setIsLoading(true);
+    setBookText("");
+
     const body = {
       requests: [
         {
@@ -53,6 +63,7 @@ export default function HomeScreen() {
         },
       ],
     };
+    const errorText = "Error detecting text from image. Please try again!";
 
     await fetch(
       `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
@@ -69,10 +80,14 @@ export default function HomeScreen() {
           getBookInfo(text);
         } else {
           console.log("No text found");
+          setIsLoading(false);
+          setBookText(errorText);
         }
       })
       .catch((e) => {
         console.error("Error detecting text:", e);
+        setIsLoading(false);
+        setBookText(errorText);
       });
   };
 
@@ -170,44 +185,54 @@ export default function HomeScreen() {
       </View>
       <ScrollView>
         <View>
-          {items.map(({ volumeInfo }, index: number) => {
-            const { title, authors = [], description } = volumeInfo || {};
-            return (
-              <View style={styles.bookCol} key={index}>
-                <View style={styles.bookRow}>
-                  <Text style={styles.bookHeader}>Title:</Text>
-                  <Text
-                    style={styles.bookItem}
-                    ellipsizeMode="tail"
-                    numberOfLines={1}
-                  >
-                    {title}
-                  </Text>
-                </View>
-                <View style={styles.bookRow}>
-                  <Text style={styles.bookHeader}>Author:</Text>
-                  <View style={styles.bookAuthorsRow}>
-                    {authors.map((author, i) => (
-                      <Text key={i} style={styles.bookAuthor}>
-                        {author}
-                        {i < authors.length - 1 ? "," : ""}
-                      </Text>
-                    ))}
+          {isLoading ? (
+            <View style={styles.emptyBooks}>
+              <ActivityIndicator size="large" color="#0e86d4" />
+            </View>
+          ) : !isLoading && !items.length ? (
+            <View style={styles.emptyBooks}>
+              <Text style={styles.emptyBooksText}>{bookText}</Text>
+            </View>
+          ) : (
+            items.map(({ volumeInfo }, index: number) => {
+              const { title, authors = [], description } = volumeInfo || {};
+              return (
+                <View style={styles.bookCol} key={index}>
+                  <View style={styles.bookRow}>
+                    <Text style={styles.bookHeader}>Title:</Text>
+                    <Text
+                      style={styles.bookItem}
+                      ellipsizeMode="tail"
+                      numberOfLines={1}
+                    >
+                      {title}
+                    </Text>
+                  </View>
+                  <View style={styles.bookRow}>
+                    <Text style={styles.bookHeader}>Author:</Text>
+                    <View style={styles.bookAuthorsRow}>
+                      {authors.map((author, i) => (
+                        <Text key={i} style={styles.bookAuthor}>
+                          {author}
+                          {i < authors.length - 1 ? "," : ""}
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
+                  <View>
+                    <Text style={styles.bookHeader}>Summary:</Text>
+                    <Text
+                      style={styles.bookItem}
+                      ellipsizeMode="tail"
+                      numberOfLines={5}
+                    >
+                      {description}
+                    </Text>
                   </View>
                 </View>
-                <View>
-                  <Text style={styles.bookHeader}>Summary:</Text>
-                  <Text
-                    style={styles.bookItem}
-                    ellipsizeMode="tail"
-                    numberOfLines={5}
-                  >
-                    {description}
-                  </Text>
-                </View>
-              </View>
-            );
-          })}
+              );
+            })
+          )}
         </View>
       </ScrollView>
     </View>
@@ -218,6 +243,7 @@ const styles = StyleSheet.create({
   layoutContainer: {
     padding: 10,
     backgroundColor: "#f0f0f0",
+    flex: 1,
   },
   topSection: {
     display: "flex",
@@ -246,6 +272,18 @@ const styles = StyleSheet.create({
   scanButtonText: {
     color: "#ffffff",
     fontSize: 16,
+  },
+  emptyBooks: {
+    height: 400,
+    width: "100%",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyBooksText: {
+    textAlign: "center",
+    fontSize: 16,
+    fontWeight: "bold",
   },
   bookCol: {
     display: "flex",
