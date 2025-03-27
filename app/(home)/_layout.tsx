@@ -144,9 +144,13 @@ export default function HomeScreen() {
     }
   };
 
-  const handleBookScan = () => {
-    if (!cameraPermission) {
-      requestCameraPermission();
+  const handleBookScan = async () => {
+    if (!cameraPermission?.granted) {
+      const permission = await requestCameraPermission();
+      if (!permission.granted) {
+        setBookText("Camera permission is required to scan books");
+        return;
+      }
     } else if (!isScanning) {
       setIsScanning(true);
       setCapturedImage("");
@@ -158,7 +162,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.layoutContainer}>
       <View style={styles.topSection}>
-        {cameraPermission && isScanning ? (
+        {cameraPermission?.granted && isScanning ? (
           <CameraView
             style={styles.cameraView}
             ref={(ref) => setCamera(ref)}
@@ -211,12 +215,16 @@ export default function HomeScreen() {
                   <View style={styles.bookRow}>
                     <Text style={styles.bookHeader}>Author:</Text>
                     <View style={styles.bookAuthorsRow}>
-                      {authors.map((author, i) => (
-                        <Text key={i} style={styles.bookAuthor}>
-                          {author}
-                          {i < authors.length - 1 ? "," : ""}
-                        </Text>
-                      ))}
+                      {authors.length ? (
+                        authors.map((author, i) => (
+                          <Text key={i} style={styles.bookAuthor}>
+                            {author}
+                            {i < authors.length - 1 ? "," : ""}
+                          </Text>
+                        ))
+                      ) : (
+                        <Text style={styles.bookAuthor}>Unknown.</Text>
+                      )}
                     </View>
                   </View>
                   <View>
@@ -226,7 +234,7 @@ export default function HomeScreen() {
                       ellipsizeMode="tail"
                       numberOfLines={5}
                     >
-                      {description}
+                      {description || "No summary available."}
                     </Text>
                   </View>
                 </View>
